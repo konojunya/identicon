@@ -1,0 +1,11 @@
+{
+  "name": "identicon",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "ssh://git@github.com/konojunya/identicon.git",
+  "author": "konojunya <junya03dance@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "md5": "^2.3.0"
+  }
+}

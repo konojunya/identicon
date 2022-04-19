@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width">
+  </head>
+  <body>
+    <h1>generate identicon</h1>
+    <input id="input" disabled />
+    <button id="generate">generate</button>
+    <div id="icon"></div>
+    <script src="./node_modules/md5/dist/md5.min.js"></script>
+    <script>
+      function createBox(id, rgb) {
+        const box = [[], [], []];
+        const icon = id.slice(0, 15);
+        icon.split('').forEach((char, index) => {
+          let row = Math.floor(index / 5);
+          box[row][index % 5] = parseInt(char, 16) % 2 === 0 ? `rgb(${rgb})` : 'white';
+        });
+        box.push(box[1]);
+        box.push(box[0]);
+
+        return box;
+      }
+
+      function hsl2rgb (h, s, l) {
+        let max = 2.55 * (l + l * (s / 100));
+        let min = 2.55 * (l - l * (s / 100));
+
+        if(l >= 50) {
+          max = 2.55 * (l + (100 - l) * (s / 100));
+          min = 2.55 * (l - (100 - l) * (s / 100));
+        }
+
+        let rgb = [0, 0, 0];
+
+        if(h >= 0 && h <= 60) {
+          rgb = [max, (h / 60) * (max - min) + min, min];
+        }
+        if(h >= 60 && h <= 120) {
+          rgb = [((120 - h) / 60 * (max - min) + min), max, min];
+        }
+        if(h >= 120 && h <= 180) {
+          rgb = [min, max, ((h - 120) / 60) * (max - min) + min];
+        }
+        if(h >= 180 && h <= 240) {
+          rgb = [min, ((240 - h) / 60) * (max - min) + min, max];
+        }
+        if(h >= 240 && h <= 300) {
+          rgb = [(h - 240) / 60 * (max - min) + min, min, max];
+        }
+
+        rgb = [max, min, ((360 - h) / 60) * (max - min) + min];
+
+        return rgb.map(Math.round).join(",");
+      }
+
+      function generateIconWithCanvas(id) {
+        const color = id.slice(-7);
+        const hue = Math.round(parseInt(color.slice(0, 3), 16) * 360 / 4095);
+        const saturation = Math.round(65 - parseInt(color.slice(3, 5), 16) * 20 / 255);
+        const brightness = Math.round(75 - parseInt(color.slice(5, 8), 16) * 20 / 255);
+        const box = createBox(id, hsl2rgb(hue, saturation, brightness));
+
+        const canvas = document.createElement('canvas');
+        const pixel = 70;
+        canvas.width = pixel * 5;
+        canvas.height = pixel * 5;
+        const ctx = canvas.getContext('2d');
+        ctx.rotate((Math.PI/180)*90);
+        ctx.translate(0, -canvas.width);
+
+        box.forEach((row, rowIndex) => {
+          row.forEach((color, columnIndex) => {
+            ctx.fillStyle = color;
+            ctx.fillRect(columnIndex * pixel, rowIndex * pixel, pixel, pixel);
+          });
+        });
+
+        return canvas.toDataURL();
+      }
+
+      function drawIcon(id) {
+        const imageElement = document.createElement('img');
+        imageElement.src = generateIconWithCanvas(id);
+        imageElement.style.margin = '16px';
+        imageElement.style.border = '1px solid gray';
+        document.getElementById("icon").appendChild(imageElement);
+      }
+
+      document.getElementById("generate").addEventListener("click", () => {
+        const uuid = Math.random().toString(36).slice(2);
+        const id = MD5(uuid);
+        document.getElementById("input").value = id;
+        drawIcon(id);
+      });
+    </script>
+  </body>
+</html>
